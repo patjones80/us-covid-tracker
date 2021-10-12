@@ -1,0 +1,116 @@
+
+.covid-header{ margin: 20px; }
+.main{ margin: 20px; }
+
+.td1 {
+text-align: right;
+font-weight: bold;
+padding-left: 20px;
+}
+
+p { text-align: justify; }
+		
+/* 
+Generic Styling, for Desktops and Laptops 
+*/
+
+.chart-container {
+ height: 600px;
+}
+
+.summary_stats {
+  width: 150px; 
+  display:inline-block; 
+  text-align:right;
+}
+
+table { 
+  width: 94%; 
+  border-collapse: collapse; 
+  margin-bottom: 25px;
+}
+
+/* Zebra striping */
+tr:nth-of-type(odd) { 
+  background: #eee; 
+}
+
+th { 
+  background: #333; 
+  color: white; 
+  font-weight: bold; 
+}
+
+td, th { 
+  padding: 6px; 
+  border: 1px solid #ccc; 
+  text-align: left; 
+}
+	
+@media only screen and (max-width: 768px)
+{
+
+.main {
+		  text-align: justify;
+		  text-justify: inter-word;
+	  }
+
+.chart-container 
+{
+	position: relative; 
+	height:60vh; 
+	width:95vw;	
+}
+
+/* Force table to not be like tables anymore */
+table, thead, tbody, th, td, tr { 
+	display: block;
+}
+
+/* Hide table headers (but not display: none;, for accessibility) */
+thead tr { 
+	position: absolute;
+	top: -9999px;
+	left: -9999px;
+}
+
+tr { border: 1px solid #ccc; }
+
+td { 
+	/* Behave  like a "row" */
+	border: none;
+	border-bottom: 1px solid #eee; 
+	position: relative;
+	padding-left: 50%; 
+}
+
+td:before { 
+	/* Now like a table header */
+	position: absolute;
+	/* Top/left values mimic padding */
+	top: 6px;
+	left: 6px;
+	width: 45%; 
+	padding-right: 10px; 
+	white-space: nowrap;
+}
+
+/* Label the data */
+td.state_table { content: "State"; }
+td:nth-of-type(2):before { content: "Total Cases"; }
+td:nth-of-type(3):before { content: "Total Deaths"; }
+td:nth-of-type(4):before { content: "New Cases"; }
+td:nth-of-type(5):before { content: "New Deaths"; }
+
+}
+
+@media only screen and (max-width: 425px)
+{
+
+.summary_stats {
+  width: 150px; 
+  display:inline-block; 
+  text-align:left;
+}
+
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html>
+	<head>		
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<title>United States COVID-19 Tracker</title>
+		
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity "sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">	
+		
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+		
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">	
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Muli">					
+<!--
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+-->		
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+		{% load static %}		
+		<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+		
+		<script>
+			function sortTable(n, element_id) 
+			{
+				var table, rows, switching, i, x, y, shouldSwitch, dir, switchCount = 0;
+				table = document.getElementById(element_id);
+				switching = true;
+			  
+				/* Set sorting direction to ascending */
+				dir = "asc";
+				
+				/* Outer loop keeps going until no switches have been made */
+				while (switching) 
+				{
+					/* Start by saying: no switching is done: */
+					switching = false;
+					rows = table.rows;
+			    
+					/* Inner loop over all table rows, except the header */
+					for (i = 1; i < (rows.length - 1); i++) 
+					{
+						shouldSwitch = false;
+						/* Get the two elements you want to compare: current and next */
+						x = rows[i].getElementsByTagName("td")[n];
+						y = rows[i + 1].getElementsByTagName("td")[n];
+			      
+						/* Check if the two rows should switch place: */
+						if (dir == "asc")
+						{
+							if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) 
+							{
+								/* If so, mark as a switch and break the loop: */
+								shouldSwitch = true;
+								break;
+							}
+						}
+						else if (dir == "desc")
+						{
+							if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) 
+							{
+								shouldSwitch = true;
+								break;
+							}
+						}
+					}
+					
+					if (shouldSwitch)
+					{			
+						/* If a switch has been marked, make the switch and mark that a switch has been done */
+						rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+						switching = true;
+						
+						/* Each time a switch is done, increase the count by one */
+						switchCount ++;
+					}
+					else
+					{						
+						/* If no switching is done AND the direction is "asc", set the direction 
+						to "desc" and run the while loop again */
+						if (switchCount == 0 && dir == "asc")
+						{
+							dir = "desc";
+							switching = true;
+						}
+					}
+				}
+			}
+		</script>
+	</head>
+
+<body>
+	<div class="container" style="font-family: 'Muli', sans-serif; margin-top: 20px;">
+		    <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
+			    <ul class="nav navbar-nav">
+				<li class="nav-item">
+				    <a href="/covid_nyt" class="nav-link active">Home</a>
+				</li>
+<!--
+				<li class="nav-item" disabled>
+				    <a href="/covid_nyt/datasource/" class="nav-link">Source</a>
+				</li>
+				<li class="nav-item" disabled>
+				    <a href="/covid_nyt/statistics/" class="nav-link">Statistics</a>
+				</li>
+-->				
+				<li class="nav-item dropdown">
+				    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Choose a state</a>
+				    <div class="dropdown-menu">
+					{% for abbr, state in state_list.items %}
+						<a href="/covid_nyt/statedata/{{ abbr }}/" class="dropdown-item">{{ state }}</a>
+					{% endfor %}						
+				    </div>
+				</li>
+			    </ul>
+		    </nav>
+
+		<div style="margin: auto; width: 80%; padding-top: 15px;">
+			<p>Welcome to the United States Covid-19 tracker. Click the links above to select a state to view, or learn more about the data and methodology.</p>
+			
+			{% block view_state %}		{% endblock %}		
+			{% block view_error %}		{% endblock %}
+			{% block source %}			{% endblock %}
+			{% block statistics %}		{% endblock %}
+		</div>
+	</div>
+
+	<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+	<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+	
+</body>
+</html>

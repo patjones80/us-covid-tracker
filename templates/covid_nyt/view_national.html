@@ -1,0 +1,118 @@
+{% extends "covid_nyt/index.html" %}
+{% load humanize %}
+
+{% block view_state %}
+
+<!--
+Table sorting reference: https://www.w3schools.com/howto/howto_js_sort_table.asp
+-->
+
+<p>You are currently viewing the tracker for <b>US National</b> as of <b>{{ as_of_date|date:"F j, Y" }}</b>.</p>
+
+<div> 
+    <p>
+       <span style="width: 150px; display:inline-block;">New cases today:</span><span class="summary_stats">{{ new_cases|intcomma }}</span><br>
+       <span style="width: 150px; display:inline-block;">Total cases:</span><span class="summary_stats">{{ total_cases|intcomma }}</span><br>
+       <span style="width: 150px; display:inline-block;">New deaths today:</span><span class="summary_stats">{{ new_deaths|intcomma }}</span><br>
+       <span style="width: 150px; display:inline-block;">Total deaths:</span><span class="summary_stats">{{ total_deaths|intcomma }}<span>
+    </p>
+</div>
+
+<div class="chart-container" style="margin:auto; width:90%;">
+    <canvas id="myChart"></canvas>
+	<table id="state_table">
+	    <thead>
+		<tr>
+		    <th>State        <a href="#"><span onclick="sortTable(0, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
+		    <th>Total Cases  <a href="#"><span onclick="sortTable(1, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
+		    <th>Total Deaths <a href="#"><span onclick="sortTable(2, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
+		    <th>New Cases    <a href="#"><span onclick="sortTable(3, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
+		    <th>New Deaths   <a href="#"><span onclick="sortTable(4, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
+		</tr>
+	    </thead>
+
+	    {% for state in states %}
+		<tr><td><a href="https://www.uscovidtracker.net/covid_nyt/statedata/{{ state_list|get_state_abbr:state.name }}/">{{ state.name }}</a></td>
+		    <td>{{ state.total_cases|intcomma  }}</td>
+		    <td>{{ state.total_deaths|intcomma }}</td>
+		    <td>{{ state.new_cases|intcomma    }}</td>
+		    <td>{{ state.new_deaths|intcomma   }}</td>
+		</tr>
+	    {% endfor %}
+	</table>
+</div>
+
+<!--
+<div class="table-responsive" style="margin-left:0px; padding-left:0px;">
+    <table class="table table-bordered table-striped" style="width: 780px;">
+-->
+
+<!--</div>-->
+
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+		{% autoescape off %}
+			labels: {{ ts_dates }},
+		{% endautoescape %}
+        datasets: [{
+            label: 'New cases',
+            data: {{ ts_new_cases }},
+            borderWidth: 1,
+            pointRadius: 0,
+            pointBackgroundColor: '#808080',
+            backgroundColor: '#808080',
+            borderColor: '#808080',
+            fill: 'false'
+        },
+        {
+            label: 'Seven day average',
+            data: {{ ts_rolling_avg }},
+            borderWidth: 3,
+            pointRadius: 0,
+            pointBackgroundColor: '#ff0000',
+            backgroundColor: '#ff0000',
+            borderColor: '#ff0000',
+            fill: 'false'
+        }]
+    },
+    options: {
+		maintainAspectRatio: false,
+		layout: {
+			padding: {
+				  left:0, top:25, right:50, bottom:25
+			}
+		},
+		scales: {
+			xAxes: [{
+				 ticks: { 
+					 beginAtZero: true
+					}
+				}],
+		    yAxes: [{
+			     ticks: {
+				    beginAtZero: true
+			}
+		    }]
+		},
+		hover: {
+			mode: 'index',
+			intersect: false
+		},
+		tooltips: {
+			   mode: 'index',
+			   intersect: false
+		},
+		legend: {
+		    labels: {
+			boxWidth: 10
+		}
+	    },
+    }
+});
+</script>
+
+
+{% endblock %}
