@@ -42,13 +42,6 @@ Table sorting reference: https://www.w3schools.com/howto/howto_js_sort_table.asp
 	</table>
 </div>
 
-<!--
-<div class="table-responsive" style="margin-left:0px; padding-left:0px;">
-    <table class="table table-bordered table-striped" style="width: 780px;">
--->
-
-<!--</div>-->
-
 <script>
 var ctx = document.getElementById('myChart').getContext('2d');
 var myChart = new Chart(ctx, {
@@ -80,39 +73,16 @@ var myChart = new Chart(ctx, {
     },
     options: {
 		maintainAspectRatio: false,
-		layout: {
-			padding: {
-				  left:0, top:25, right:50, bottom:25
-			}
-		},
-		scales: {
-			xAxes: [{
-				 ticks: { 
-					 beginAtZero: true
-					}
-				}],
-		    yAxes: [{
-			     ticks: {
-				    beginAtZero: true
-			}
-		    }]
-		},
-		hover: {
-			mode: 'index',
-			intersect: false
-		},
-		tooltips: {
-			   mode: 'index',
-			   intersect: false
-		},
-		legend: {
-		    labels: {
-			boxWidth: 10
-		}
-	    },
-    }
+		layout: {padding: {left:0, top:25, right:50, bottom:25}},
+		scales: {xAxes: [{ticks: {beginAtZero: true}}],
+			 yAxes: [{ticks: {beginAtZero: true}}]},
+		hover:  {mode: 'index',
+			 intersect: false},
+		tooltips: {mode: 'index',
+			   intersect: false},
+		legend: {labels: {boxWidth: 10}},
+             }
 });
 </script>
-
 
 {% endblock %}

@@ -124,7 +124,7 @@ def national(request):
 
         template = loader.get_template('covid_nyt/view_national.html')
 
-    # except Exception as e:
+#    except Exception as e:
         # eprint('Problem returning HTTP request: {}'.format(e))
         
         # context = base_context
