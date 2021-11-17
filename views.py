@@ -109,6 +109,8 @@ def national(request):
         ts_new_cases = [data[j][3] for j in range(0, days)]
         ts_rolling_avg = [data[j][5] for j in range(0, days)]
 
+        eprint(type(ts_new_cases[0]))
+                
         # current state rollups
         states = sqllib.get_all_states_current()
 

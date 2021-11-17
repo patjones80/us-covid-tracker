@@ -21,7 +21,6 @@ Table sorting reference: https://www.w3schools.com/howto/howto_js_sort_table.asp
 <div class="chart-container" style="margin:auto; width:90%;">
     <canvas id="myChart"></canvas>
 	<table id="state_table">
-	    <thead>
 		<tr>
 		    <th>State        <a href="#"><span onclick="sortTable(0, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
 		    <th>Total Cases  <a href="#"><span onclick="sortTable(1, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
@@ -29,7 +28,6 @@ Table sorting reference: https://www.w3schools.com/howto/howto_js_sort_table.asp
 		    <th>New Cases    <a href="#"><span onclick="sortTable(3, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
 		    <th>New Deaths   <a href="#"><span onclick="sortTable(4, 'state_table')"><ion-icon name="swap-vertical-outline"></ion-icon></span></a></th>
 		</tr>
-	    </thead>
 
 	    {% for state in states %}
 		<tr><td><a href="https://www.uscovidtracker.net/covid_nyt/statedata/{{ state_list|get_state_abbr:state.name }}/">{{ state.name }}</a></td>
