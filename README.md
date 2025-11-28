@@ -1,6 +1,6 @@
 ## About
 
-This is a frontend that utilizes the publicly available data in the New York Times GitHub repository: https://github.com/nytimes/covid-19-data
+This is a simple data pipeline that utilizes the publicly available data in the New York Times GitHub repository: https://github.com/nytimes/covid-19-data
 
 ## Built With
 
