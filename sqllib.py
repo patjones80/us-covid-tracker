@@ -20,7 +20,6 @@ def db_connect_pg():
 
 def get_national():
     ''' Query state-level data table and aggregate up to national level
-    
         Return: list of tuples that contain - 
                 0: updated on
                 1: total cases
@@ -104,168 +103,163 @@ def get_state_rollup(us_state):
     return result
 
 def get_county_level(us_state):
-        ''' get the county-level list for the selected state
-                takes: verbose state name
+    ''' Get the county-level list for the selected state
+        Takes: verbose state name
+        Return: list of tuples that contain - 
+                0: county name
+                1: total cases
+                2: total deaths
+                3: current cases
+                4: current deaths    
+    '''
+    conn = db_connect_pg()
+    c = conn.cursor()
+    
+    sql_pg = '''WITH cte AS (SELECT *
+                             FROM county_data AS cd
+                             WHERE cd.state = '{a_state}' AND updated_on IN (SELECT DISTINCT updated_on
+                                                                             FROM county_data
+                                                                             WHERE state = '{a_state}'
+                                                                             ORDER BY updated_on DESC
+                                                                             LIMIT 2)
+                             ORDER BY updated_on DESC, cases DESC) 
+    
+                 SELECT a.county, 
+                        a.cases, 
+                        a.deaths, 
+                        a.cases  - b.cases   AS new_cases, 
+                        a.deaths - b.deaths  AS new_deaths
+                 FROM cte a INNER JOIN cte b ON a.county = b.county
+                                                AND a.updated_on - b.updated_on = 1;'''.format(a_state = us_state)
+    
+    c.execute(sql_pg)
+    result = c.fetchall()
+    conn.close()
 
-                return: list of tuples that contain - 
-                                0: county name
-                                1: total cases
-                                2: total deaths
-                                3: current cases
-                                4: current deaths
+    County = namedtuple('County', ['name', 'total_cases', 'total_deaths', 'new_cases', 'new_deaths'])
+    result = [County(*county) for county in result]
 
-        '''
-
-        conn = db_connect_pg()
-        c = conn.cursor()
-
-        sql_pg = '''WITH cte AS (SELECT *
-                                                     FROM county_data AS cd
-                                                     WHERE cd.state = '{a_state}' AND updated_on IN (SELECT DISTINCT updated_on
-                                                                                                                                                 FROM county_data
-                                                                                                                                                 WHERE state = '{a_state}'
-                                                                                                                                                 ORDER BY updated_on DESC
-                                                                                                                                                 LIMIT 2)
-                                                     ORDER BY updated_on DESC, cases DESC) 
-
-                         SELECT a.county, 
-                                    a.cases, 
-                                    a.deaths, 
-                                        a.cases  - b.cases   AS new_cases, 
-                                    a.deaths - b.deaths  AS new_deaths
-                         FROM cte a INNER JOIN cte b ON a.county = b.county
-                                                                                    AND a.updated_on - b.updated_on = 1;'''.format(a_state = us_state)
-
-        c.execute(sql_pg)
-        result = c.fetchall()
-        conn.close()
-
-        County = namedtuple('County', ['name', 'total_cases', 'total_deaths', 'new_cases', 'new_deaths'])
-        result = [County(*county) for county in result]
-
-        return result
+    return result
 
 def get_hashes():
-        conn = db_connect_pg()
-        c = conn.cursor()
-
-        sql = '''SELECT hashed FROM county_data'''
-
-        c.execute(sql)
-        result = [t[0] for t in c.fetchall()]
-        conn.close()
-
-        return result
+    conn = db_connect_pg()
+    c = conn.cursor()
+    
+    sql = '''SELECT hashed FROM county_data'''
+    
+    c.execute(sql)
+    result = [t[0] for t in c.fetchall()]
+    conn.close()
+    
+    return result
 
 def update_county(current):
-        # takes the full path to the file containing new records
-        conn = db_connect_pg()
-        c = conn.cursor()
-
-        with open(current, 'r') as f:
-                try:
-                        c.execute('''CREATE TEMP TABLE tmp_table
-                                                 ON COMMIT DROP
-                                                 AS
-                                                 SELECT *
-                                                 FROM county_data
-                                                 WITH NO DATA;''')
-
-                        c.copy_expert('''COPY tmp_table FROM STDIN WITH (FORMAT CSV)''', f)
-                        c.execute('''INSERT INTO county_data
-                                                 SELECT *
-                                                 FROM tmp_table
-                                                 ON CONFLICT (hashed) DO UPDATE SET cases  = EXCLUDED.cases,
-                                                                                                                        deaths = EXCLUDED.deaths''', f)
-
-                        conn.commit()
-
-                except Exception as e:
-                        eprint('Problem inserting county-level data: {}'.format(e))
-
-        conn.close()
+    # Takes the full path to the file containing new records
+    conn = db_connect_pg()
+    c = conn.cursor()
+    
+    with open(current, 'r') as f:
+        try:
+            c.execute('''CREATE TEMP TABLE tmp_table
+                         ON COMMIT DROP
+                         AS
+                         SELECT *
+                         FROM county_data
+                         WITH NO DATA;''')
+    
+            c.copy_expert('''COPY tmp_table FROM STDIN WITH (FORMAT CSV)''', f)
+            c.execute('''INSERT INTO county_data
+                         SELECT *
+                         FROM tmp_table
+                         ON CONFLICT (hashed) DO UPDATE SET cases  = EXCLUDED.cases, deaths = EXCLUDED.deaths''', f)
+    
+            conn.commit()
+        
+        except Exception as e:
+                eprint('Problem inserting county-level data: {}'.format(e))
+    
+    conn.close()
 
 def update_state(current):
-        # takes the full path to the file containing new records
-        conn = db_connect_pg()
-        c = conn.cursor()
+    # Takes the full path to the file containing new records
+    conn = db_connect_pg()
+    c = conn.cursor()
 
-        with open(current, 'r') as f:
-                try:
-                        c.execute('''CREATE TEMP TABLE tmp_table 
-                                                 ON COMMIT DROP
-                                                 AS
-                                                 SELECT * 
-                                                 FROM state_data
-                                                 WITH NO DATA;''')
-
-                        c.copy_expert('''COPY tmp_table FROM STDIN WITH (FORMAT CSV)''', f)
-
-                        c.execute('''INSERT INTO state_data
-                                                 SELECT *
-                                                 FROM tmp_table
-                                                 ON CONFLICT (hashed) DO UPDATE SET cases  = EXCLUDED.cases,
-                                                                                                                        deaths = EXCLUDED.deaths''', f)
-
-                        conn.commit()
-
-                except Exception as e:
-                        eprint('Problem inserting state-level data: {}'.format(e))
-
-        conn.close()
+    with open(current, 'r') as f:
+        try:
+            c.execute('''CREATE TEMP TABLE tmp_table 
+                         ON COMMIT DROP
+                         AS
+                         SELECT * 
+                         FROM state_data
+                         WITH NO DATA;''')
+    
+            c.copy_expert('''COPY tmp_table FROM STDIN WITH (FORMAT CSV)''', f)
+        
+            c.execute('''INSERT INTO state_data
+                         SELECT *
+                         FROM tmp_table
+                         ON CONFLICT (hashed) DO UPDATE SET cases  = EXCLUDED.cases, deaths = EXCLUDED.deaths''', f)
+    
+            conn.commit()
+        
+        except Exception as e:
+            eprint('Problem inserting state-level data: {}'.format(e))
+    
+    conn.close()
 
 def make_all_states_current():
-        # do a rollup for each state for the current (or most recently available) day
-         # and put them in a table that the django app can query from; this table should
-        # end up with only 55 rows
+    ''' Do a rollup for each state for the current (or most recently available) day
+        and put them in a table that the django app can query from; this table should
+        end up with only 55 rows
+    
+        IMPORTANT: this would need to be called after the state level updates in order
+        to be current
+    '''
+    sql = '''DELETE FROM state_rollups_current;
 
-        # IMPORTANT: this would need to be called after the state level updates in order
-        # to be current
+             INSERT INTO state_rollups_current
+             SELECT state_list.state, state_result.*
+             FROM (SELECT DISTINCT state
+                   FROM state_data) state_list,
+                   LATERAL
+                  (SELECT a.updated_on, a.cases, a.deaths, a.cases  - b.cases  AS new_cases, a.deaths - b.deaths AS new_deaths
+                   FROM state_data a
+                                INNER JOIN state_data b ON (a.updated_on::date - b.updated_on::date) = 1 AND a.state = b.state
+                   WHERE a.state = state_list.state
+                   ORDER BY a.updated_on DESC
+                   LIMIT 1) state_result;'''
 
-        sql = '''DELETE FROM state_rollups_current;
-
-                         INSERT INTO state_rollups_current
-                         SELECT state_list.state, state_result.*
-                         FROM (SELECT DISTINCT state
-                                   FROM state_data) state_list,
-                                   LATERAL
-                                  (SELECT a.updated_on, a.cases, a.deaths, a.cases  - b.cases  AS new_cases, a.deaths - b.deaths AS new_deaths
-                                   FROM state_data a
-                                                INNER JOIN state_data b ON (a.updated_on::date - b.updated_on::date) = 1 AND a.state = b.state
-                                   WHERE a.state = state_list.state
-                                   ORDER BY a.updated_on DESC
-                                   LIMIT 1) state_result;'''
-
-        try:
-            conn = db_connect_pg()
-            c = conn.cursor()
-
-            c.execute(sql)
-            conn.commit()
-
-            conn.close()
-            
-        except Exception as e:
-            eprint('Problem doing update of current day state level rollup: {}'.format(e))
-
-def get_all_states_current():
-        # find the rollups for each state for today
-        # this is just a query of the table built up in the previous function make_all_states_current
-        
-        # it's more efficient to query this each time the django app needs it instead of doing the
-        # query in that function, which takes much longer
-        
-        sql = '''SELECT * FROM state_rollups_current ORDER BY state;'''
-
+    try:
         conn = db_connect_pg()
         c = conn.cursor()
 
         c.execute(sql)
-        result = c.fetchall()
-        
+        conn.commit()
         conn.close()
-
-        State = namedtuple('State', ['name', 'updated_on', 'total_cases', 'total_deaths', 'new_cases', 'new_deaths'])
-        result = [State(*state) for state in result]
         
-        return result                        
+    except Exception as e:
+        eprint('Problem doing update of current day state level rollup: {}'.format(e))
+
+def get_all_states_current():
+    ''' Find the rollups for each state for today. This is just a query of the table built up 
+        in the previous function make_all_states_current.
+    
+        It's more efficient to query this each time the django app needs it instead of doing the
+        query in that function, which takes much longer.
+    '''
+    sql = '''SELECT * 
+             FROM state_rollups_current ORDER BY state;
+          '''
+    
+    conn = db_connect_pg()
+    c = conn.cursor()
+    
+    c.execute(sql)
+    result = c.fetchall()    
+    conn.close()
+    
+    State = namedtuple('State', ['name', 'updated_on', 'total_cases', 'total_deaths', 'new_cases', 'new_deaths'])
+    result = [State(*state) for state in result]
+    
+    return result                        
