@@ -1,7 +1,3 @@
-# US Covid Tracker
-
-This repo contains the codebase for the website https://www.uscovidtracker.net/covid_nyt.
-
 ## About
 
 This is a frontend that utilizes the publicly available data in the New York Times GitHub repository: https://github.com/nytimes/covid-19-data
